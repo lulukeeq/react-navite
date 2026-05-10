@@ -28,6 +28,7 @@ const Tabs = () => {
   const themeMode = useStore((s) => s.themeMode);
   const sys = useColorScheme();
   const palette = palettes[themeMode === 'system' ? (sys === 'dark' ? 'dark' : 'light') : themeMode];
+
   return (
     <Tab.Navigator
       screenOptions={{
@@ -41,24 +42,24 @@ const Tabs = () => {
         name="Home"
         component={HomeScreen}
         options={{
-          title: '账单',
-          tabBarIcon: ({ color }) => <TabIcon label="账" color={color} />,
+          title: 'Ledger',
+          tabBarIcon: ({ color }) => <TabIcon label="L" color={color} />,
         }}
       />
       <Tab.Screen
         name="Stats"
         component={StatsScreen}
         options={{
-          title: '统计',
-          tabBarIcon: ({ color }) => <TabIcon label="计" color={color} />,
+          title: 'Stats',
+          tabBarIcon: ({ color }) => <TabIcon label="S" color={color} />,
         }}
       />
       <Tab.Screen
         name="Me"
         component={MeScreen}
         options={{
-          title: '我的',
-          tabBarIcon: ({ color }) => <TabIcon label="我" color={color} />,
+          title: 'Me',
+          tabBarIcon: ({ color }) => <TabIcon label="M" color={color} />,
         }}
       />
     </Tab.Navigator>
@@ -68,6 +69,7 @@ const Tabs = () => {
 const buildTheme = (dark: boolean): Theme => {
   const base = dark ? DarkTheme : DefaultTheme;
   const p = palettes[dark ? 'dark' : 'light'];
+
   return {
     ...base,
     dark,
@@ -103,12 +105,12 @@ export default function App() {
           <Stack.Screen
             name="Edit"
             component={EditScreen}
-            options={{ title: '记一笔', presentation: 'modal' }}
+            options={{ title: 'Add Record', presentation: 'modal' }}
           />
-          <Stack.Screen name="Categories" component={CategoriesScreen} options={{ title: '分类管理' }} />
-          <Stack.Screen name="Budgets" component={BudgetsScreen} options={{ title: '预算设置' }} />
-          <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: '设置' }} />
-          <Stack.Screen name="About" component={AboutScreen} options={{ title: '关于' }} />
+          <Stack.Screen name="Categories" component={CategoriesScreen} options={{ title: 'Categories' }} />
+          <Stack.Screen name="Budgets" component={BudgetsScreen} options={{ title: 'Budgets' }} />
+          <Stack.Screen name="Settings" component={SettingsScreen} options={{ title: 'Settings' }} />
+          <Stack.Screen name="About" component={AboutScreen} options={{ title: 'About' }} />
         </Stack.Navigator>
       </NavigationContainer>
       <StatusBar style={isDark ? 'light' : 'dark'} />
@@ -118,7 +120,11 @@ export default function App() {
 
 const styles = StyleSheet.create({
   icon: {
-    width: 22, height: 22, borderRadius: 11, borderWidth: 1.5,
-    alignItems: 'center', justifyContent: 'center',
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

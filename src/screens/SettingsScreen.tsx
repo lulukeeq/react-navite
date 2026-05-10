@@ -8,21 +8,24 @@ import { useColors } from '../colors';
 import { ThemeMode } from '../types';
 import { txsToCSV, csvToTxs } from '../utils';
 
+const UTF8_BOM = '\uFEFF';
+
 export const SettingsScreen = () => {
   const c = useColors();
   const { themeMode, setThemeMode, transactions, importTxs, clearAll } = useStore();
 
   const exportCSV = async () => {
     if (transactions.length === 0) {
-      Alert.alert('提示', '暂无数据可导出');
+      Alert.alert('Notice', 'There is no data to export yet.');
       return;
     }
+
     const csv = txsToCSV(transactions);
     const filename = `bookkeeping-${new Date().toISOString().slice(0, 10)}.csv`;
 
     if (Platform.OS === 'web') {
       try {
-        const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8' });
+        const blob = new Blob([UTF8_BOM + csv], { type: 'text/csv;charset=utf-8' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -32,24 +35,24 @@ export const SettingsScreen = () => {
         a.remove();
         URL.revokeObjectURL(url);
       } catch (e: any) {
-        Alert.alert('导出失败', String(e?.message ?? e));
+        Alert.alert('Export failed', String(e?.message ?? e));
       }
       return;
     }
 
     try {
       const path = FileSystem.documentDirectory + filename;
-      await FileSystem.writeAsStringAsync(path, '﻿' + csv, {
+      await FileSystem.writeAsStringAsync(path, UTF8_BOM + csv, {
         encoding: FileSystem.EncodingType.UTF8,
       });
       const canShare = await Sharing.isAvailableAsync();
       if (canShare) {
-        await Sharing.shareAsync(path, { mimeType: 'text/csv', dialogTitle: '导出账单' });
+        await Sharing.shareAsync(path, { mimeType: 'text/csv', dialogTitle: 'Export ledger' });
       } else {
-        Alert.alert('已保存', `文件已保存到：\n${path}`);
+        Alert.alert('Saved', `File saved to:\n${path}`);
       }
     } catch (e: any) {
-      Alert.alert('导出失败', String(e?.message ?? e));
+      Alert.alert('Export failed', String(e?.message ?? e));
     }
   };
 
@@ -60,8 +63,10 @@ export const SettingsScreen = () => {
         copyToCacheDirectory: true,
       });
       if (res.canceled || !res.assets?.[0]) return;
+
       const asset = res.assets[0];
-      let content: string;
+      let content = '';
+
       if (Platform.OS === 'web') {
         const file: any = asset.file;
         content = file ? await file.text() : '';
@@ -70,49 +75,60 @@ export const SettingsScreen = () => {
           encoding: FileSystem.EncodingType.UTF8,
         });
       }
-      const stripped = content.replace(/^﻿/, '');
+
+      const stripped = content.replace(/^\uFEFF/, '');
       const items = csvToTxs(stripped);
       if (items.length === 0) {
-        Alert.alert('导入失败', '未识别到有效记录');
+        Alert.alert('Import failed', 'No valid records were found in the selected file.');
         return;
       }
-      Alert.alert('确认导入', `识别到 ${items.length} 条记录，是否合并到当前数据？`, [
-        { text: '取消', style: 'cancel' },
+
+      Alert.alert('Confirm import', `Detected ${items.length} records. Merge them into the current data?`, [
+        { text: 'Cancel', style: 'cancel' },
         {
-          text: '合并',
+          text: 'Merge',
           onPress: async () => {
             await importTxs(items);
-            Alert.alert('完成', `已导入 ${items.length} 条`);
+            Alert.alert('Done', `Imported ${items.length} records.`);
           },
         },
       ]);
     } catch (e: any) {
-      Alert.alert('导入失败', String(e?.message ?? e));
+      Alert.alert('Import failed', String(e?.message ?? e));
     }
   };
 
   const onClear = () => {
-    Alert.alert('清空数据', '将删除所有交易、自定义分类、预算，无法恢复。', [
-      { text: '取消', style: 'cancel' },
-      {
-        text: '确认清空',
-        style: 'destructive',
-        onPress: async () => {
-          await clearAll();
-          Alert.alert('已清空');
+    Alert.alert(
+      'Clear data',
+      'This will delete all transactions, custom categories, and budgets. This action cannot be undone.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Clear all',
+          style: 'destructive',
+          onPress: async () => {
+            await clearAll();
+            Alert.alert('Done', 'All local data has been cleared.');
+          },
         },
-      },
-    ]);
+      ],
+    );
   };
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.bg }]} edges={['bottom']}>
       <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <Text style={[styles.section, { color: c.textMuted }]}>主题</Text>
+        <Text style={[styles.section, { color: c.textMuted }]}>Theme</Text>
         <View style={[styles.themeRow, { backgroundColor: c.card }]}>
           {(['system', 'light', 'dark'] as const).map((m: ThemeMode) => {
             const active = themeMode === m;
-            const labels: Record<ThemeMode, string> = { system: '跟随系统', light: '浅色', dark: '深色' };
+            const labels: Record<ThemeMode, string> = {
+              system: 'System',
+              light: 'Light',
+              dark: 'Dark',
+            };
+
             return (
               <Pressable
                 key={m}
@@ -130,21 +146,19 @@ export const SettingsScreen = () => {
           })}
         </View>
 
-        <Text style={[styles.section, { color: c.textMuted }]}>数据</Text>
+        <Text style={[styles.section, { color: c.textMuted }]}>Data</Text>
         <Pressable style={[styles.row, { backgroundColor: c.card }]} onPress={exportCSV}>
-          <Text style={[styles.rowTitle, { color: c.text }]}>导出 CSV</Text>
-          <Text style={[styles.rowHint, { color: c.textDim }]}>
-            {transactions.length} 条记录
-          </Text>
+          <Text style={[styles.rowTitle, { color: c.text }]}>Export CSV</Text>
+          <Text style={[styles.rowHint, { color: c.textDim }]}>{transactions.length} records</Text>
         </Pressable>
         <Pressable style={[styles.row, { backgroundColor: c.card }]} onPress={importCSV}>
-          <Text style={[styles.rowTitle, { color: c.text }]}>导入 CSV</Text>
-          <Text style={[styles.rowHint, { color: c.textDim }]}>合并到当前</Text>
+          <Text style={[styles.rowTitle, { color: c.text }]}>Import CSV</Text>
+          <Text style={[styles.rowHint, { color: c.textDim }]}>Merge into current data</Text>
         </Pressable>
 
-        <Text style={[styles.section, { color: c.textMuted }]}>危险操作</Text>
+        <Text style={[styles.section, { color: c.textMuted }]}>Danger Zone</Text>
         <Pressable style={[styles.row, { backgroundColor: c.card }]} onPress={onClear}>
-          <Text style={[styles.rowTitle, { color: c.expense }]}>清空所有数据</Text>
+          <Text style={[styles.rowTitle, { color: c.expense }]}>Clear all data</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>
@@ -156,11 +170,19 @@ const styles = StyleSheet.create({
   section: { fontSize: 12, marginTop: 12, marginBottom: 6, paddingHorizontal: 4 },
   themeRow: { flexDirection: 'row', borderRadius: 10, padding: 6, gap: 6, marginBottom: 4 },
   themeBtn: {
-    flex: 1, paddingVertical: 10, alignItems: 'center', borderRadius: 6, borderWidth: 1,
+    flex: 1,
+    paddingVertical: 10,
+    alignItems: 'center',
+    borderRadius: 6,
+    borderWidth: 1,
   },
   row: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    padding: 14, borderRadius: 8, marginBottom: 6,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 14,
+    borderRadius: 8,
+    marginBottom: 6,
   },
   rowTitle: { fontSize: 15 },
   rowHint: { fontSize: 12 },
