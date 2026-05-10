@@ -1,4 +1,4 @@
-import { useMemo, useEffect } from 'react';
+import { useMemo } from 'react';
 import { View, Text, FlatList, StyleSheet, Pressable } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
@@ -13,12 +13,8 @@ export const HomeScreen = () => {
   const navigation = useNavigation<any>();
   const c = useColors();
   const {
-    transactions, categories, hydrate, hydrated, removeTx, selectedMonth,
+    transactions, categories, removeTx, selectedMonth,
   } = useStore();
-
-  useEffect(() => {
-    if (!hydrated) hydrate();
-  }, [hydrated, hydrate]);
 
   const monthTxs = useMemo(
     () => transactionsInMonth(transactions, selectedMonth),

@@ -16,7 +16,7 @@ export const SettingsScreen = () => {
 
   const exportCSV = async () => {
     if (transactions.length === 0) {
-      Alert.alert('Notice', 'There is no data to export yet.');
+      Alert.alert('\u63D0\u793A', '\u6682\u65E0\u6570\u636E\u53EF\u5BFC\u51FA');
       return;
     }
 
@@ -35,7 +35,7 @@ export const SettingsScreen = () => {
         a.remove();
         URL.revokeObjectURL(url);
       } catch (e: any) {
-        Alert.alert('Export failed', String(e?.message ?? e));
+        Alert.alert('\u5BFC\u51FA\u5931\u8D25', String(e?.message ?? e));
       }
       return;
     }
@@ -47,12 +47,12 @@ export const SettingsScreen = () => {
       });
       const canShare = await Sharing.isAvailableAsync();
       if (canShare) {
-        await Sharing.shareAsync(path, { mimeType: 'text/csv', dialogTitle: 'Export ledger' });
+        await Sharing.shareAsync(path, { mimeType: 'text/csv', dialogTitle: '\u5BFC\u51FA\u8D26\u5355' });
       } else {
-        Alert.alert('Saved', `File saved to:\n${path}`);
+        Alert.alert('\u5DF2\u4FDD\u5B58', `\u6587\u4EF6\u5DF2\u4FDD\u5B58\u5230\uFF1A\n${path}`);
       }
     } catch (e: any) {
-      Alert.alert('Export failed', String(e?.message ?? e));
+      Alert.alert('\u5BFC\u51FA\u5931\u8D25', String(e?.message ?? e));
     }
   };
 
@@ -79,37 +79,37 @@ export const SettingsScreen = () => {
       const stripped = content.replace(/^\uFEFF/, '');
       const items = csvToTxs(stripped);
       if (items.length === 0) {
-        Alert.alert('Import failed', 'No valid records were found in the selected file.');
+        Alert.alert('\u5BFC\u5165\u5931\u8D25', '\u672A\u8BC6\u522B\u5230\u6709\u6548\u8BB0\u5F55');
         return;
       }
 
-      Alert.alert('Confirm import', `Detected ${items.length} records. Merge them into the current data?`, [
-        { text: 'Cancel', style: 'cancel' },
+      Alert.alert('\u786E\u8BA4\u5BFC\u5165', `\u8BC6\u522B\u5230 ${items.length} \u6761\u8BB0\u5F55\uFF0C\u662F\u5426\u5408\u5E76\u5230\u5F53\u524D\u6570\u636E\uFF1F`, [
+        { text: '\u53D6\u6D88', style: 'cancel' },
         {
-          text: 'Merge',
+          text: '\u5408\u5E76',
           onPress: async () => {
             await importTxs(items);
-            Alert.alert('Done', `Imported ${items.length} records.`);
+            Alert.alert('\u5B8C\u6210', `\u5DF2\u5BFC\u5165 ${items.length} \u6761`);
           },
         },
       ]);
     } catch (e: any) {
-      Alert.alert('Import failed', String(e?.message ?? e));
+      Alert.alert('\u5BFC\u5165\u5931\u8D25', String(e?.message ?? e));
     }
   };
 
   const onClear = () => {
     Alert.alert(
-      'Clear data',
-      'This will delete all transactions, custom categories, and budgets. This action cannot be undone.',
+      '\u91CD\u7F6E\u672C\u5730\u6570\u636E',
+      '\u5C06\u6E05\u7A7A\u672C\u5730\u7F13\u5B58\u5E76\u4ECE\u670D\u52A1\u5668\u91CD\u65B0\u62C9\u53D6\uFF08\u4E91\u7AEF\u6570\u636E\u4E0D\u53D7\u5F71\u54CD\uFF09\u3002',
       [
-        { text: 'Cancel', style: 'cancel' },
+        { text: '\u53D6\u6D88', style: 'cancel' },
         {
-          text: 'Clear all',
+          text: '\u786E\u8BA4\u91CD\u7F6E',
           style: 'destructive',
           onPress: async () => {
             await clearAll();
-            Alert.alert('Done', 'All local data has been cleared.');
+            Alert.alert('\u5B8C\u6210', '\u672C\u5730\u7F13\u5B58\u5DF2\u91CD\u7F6E\uFF0C\u6B63\u5728\u91CD\u65B0\u540C\u6B65');
           },
         },
       ],
@@ -119,14 +119,14 @@ export const SettingsScreen = () => {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: c.bg }]} edges={['bottom']}>
       <ScrollView contentContainerStyle={{ padding: 16 }}>
-        <Text style={[styles.section, { color: c.textMuted }]}>Theme</Text>
+        <Text style={[styles.section, { color: c.textMuted }]}>主题</Text>
         <View style={[styles.themeRow, { backgroundColor: c.card }]}>
           {(['system', 'light', 'dark'] as const).map((m: ThemeMode) => {
             const active = themeMode === m;
             const labels: Record<ThemeMode, string> = {
-              system: 'System',
-              light: 'Light',
-              dark: 'Dark',
+              system: '跟随系统',
+              light: '浅色',
+              dark: '深色',
             };
 
             return (
@@ -146,19 +146,19 @@ export const SettingsScreen = () => {
           })}
         </View>
 
-        <Text style={[styles.section, { color: c.textMuted }]}>Data</Text>
+        <Text style={[styles.section, { color: c.textMuted }]}>数据</Text>
         <Pressable style={[styles.row, { backgroundColor: c.card }]} onPress={exportCSV}>
-          <Text style={[styles.rowTitle, { color: c.text }]}>Export CSV</Text>
-          <Text style={[styles.rowHint, { color: c.textDim }]}>{transactions.length} records</Text>
+          <Text style={[styles.rowTitle, { color: c.text }]}>导出 CSV</Text>
+          <Text style={[styles.rowHint, { color: c.textDim }]}>{transactions.length} 条记录</Text>
         </Pressable>
         <Pressable style={[styles.row, { backgroundColor: c.card }]} onPress={importCSV}>
-          <Text style={[styles.rowTitle, { color: c.text }]}>Import CSV</Text>
-          <Text style={[styles.rowHint, { color: c.textDim }]}>Merge into current data</Text>
+          <Text style={[styles.rowTitle, { color: c.text }]}>导入 CSV</Text>
+          <Text style={[styles.rowHint, { color: c.textDim }]}>合并到当前数据</Text>
         </Pressable>
 
-        <Text style={[styles.section, { color: c.textMuted }]}>Danger Zone</Text>
+        <Text style={[styles.section, { color: c.textMuted }]}>危险操作</Text>
         <Pressable style={[styles.row, { backgroundColor: c.card }]} onPress={onClear}>
-          <Text style={[styles.rowTitle, { color: c.expense }]}>Clear all data</Text>
+          <Text style={[styles.rowTitle, { color: c.expense }]}>重置本地缓存</Text>
         </Pressable>
       </ScrollView>
     </SafeAreaView>

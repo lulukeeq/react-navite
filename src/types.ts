@@ -5,6 +5,8 @@ export type Category = {
   name: string;
   type: TransactionType;
   isCustom?: boolean;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type Transaction = {
@@ -14,11 +16,17 @@ export type Transaction = {
   categoryId: string;
   note: string;
   date: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type Budget = {
+  id: string;
   categoryId: string;
   amount: number;
+  period?: string;
+  createdAt?: string;
+  updatedAt?: string;
 };
 
 export type ThemeMode = 'light' | 'dark' | 'system';

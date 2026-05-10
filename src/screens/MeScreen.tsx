@@ -1,8 +1,9 @@
 import { useMemo } from 'react';
-import { View, Text, StyleSheet, ScrollView, Pressable } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, Pressable, Alert } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { useStore } from '../store';
+import { useSession } from '../auth/sessionStore';
 import { formatCNY } from '../utils';
 import { useColors } from '../colors';
 
@@ -30,6 +31,15 @@ export const MeScreen = () => {
   const c = useColors();
   const navigation = useNavigation<any>();
   const { transactions, categories } = useStore();
+  const sessionUser = useSession((s) => s.user);
+  const logout = useSession((s) => s.logout);
+
+  const onLogout = () => {
+    Alert.alert('退出登录', '确定要退出当前账号吗？', [
+      { text: '取消', style: 'cancel' },
+      { text: '退出', style: 'destructive', onPress: () => logout() },
+    ]);
+  };
 
   const summary = useMemo(() => {
     const total = transactions.length;
@@ -51,11 +61,20 @@ export const MeScreen = () => {
             <Text style={styles.avatarText}>记</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.name, { color: c.text }]}>记账小本</Text>
+            <Text style={[styles.name, { color: c.text }]}>
+              {sessionUser?.phone ?? '记账小本'}
+            </Text>
             <Text style={{ color: c.textMuted, fontSize: 12, marginTop: 4 }}>
               共 {summary.total} 笔记录 · 记账 {summary.days} 天
             </Text>
           </View>
+          <Pressable
+            style={[styles.logoutBtn, { borderColor: c.expense }]}
+            onPress={onLogout}
+            hitSlop={8}
+          >
+            <Text style={{ color: c.expense, fontSize: 13, fontWeight: '500' }}>退出</Text>
+          </Pressable>
         </View>
 
         <View style={[styles.statsCard, { backgroundColor: c.card }]}>
@@ -88,6 +107,7 @@ export const MeScreen = () => {
         <Text style={[styles.section, { color: c.textMuted }]}>设置</Text>
         <Row title="主题 / 数据" onPress={() => navigation.navigate('Settings')} />
         <Row title="关于" onPress={() => navigation.navigate('About')} />
+
       </ScrollView>
     </SafeAreaView>
   );
@@ -117,4 +137,10 @@ const styles = StyleSheet.create({
   },
   rowTitle: { fontSize: 15 },
   rowEnd: { flexDirection: 'row', alignItems: 'center' },
+  logoutBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 14,
+    borderWidth: 1,
+  },
 });
